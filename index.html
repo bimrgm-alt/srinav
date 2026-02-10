@@ -10,11 +10,6 @@
             --belt-dark: #1a1a1a;
             --belt-texture: #262626;
             --frame-color: #475569;
-            --zone1: rgba(59, 130, 246, 0.15); 
-            --zone2: rgba(139, 92, 246, 0.15); 
-            --zone3: rgba(236, 72, 153, 0.15); 
-            --zone4: rgba(234, 179, 8, 0.15);  
-            --zone5: rgba(34, 197, 94, 0.15);  
         }
 
         body {
@@ -112,9 +107,14 @@
             justify-content: center;
             color: #1e293b;
             font-weight: 900;
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(255,255,255,0.8);
             z-index: 10;
+            transition: transform 0.1s linear; 
+            will-change: transform;
+            text-align: center;
+            overflow: hidden;
+            padding: 2px;
         }
 
         .uturn-indicator {
@@ -133,17 +133,55 @@
             letter-spacing: 0.1em;
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
         }
+
+        #inputModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            backdrop-filter: blur(8px);
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
+
+    <!-- Modal for Loading Product -->
+    <div id="inputModal">
+        <div class="bg-slate-800 p-8 rounded-2xl border border-slate-700 w-full max-w-md shadow-2xl">
+            <h3 class="text-2xl font-black mb-6 text-blue-400 italic">LOAD NEW UNIT</h3>
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Product Description</label>
+                    <input type="text" id="modalProdName" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none text-white font-bold" placeholder="Enter Product Name...">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Start Time (Optional)</label>
+                        <input type="time" id="modalStartTime" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Target Exit (Optional)</label>
+                        <input type="time" id="modalFinishTime" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white">
+                    </div>
+                </div>
+                <div class="flex gap-4 pt-4">
+                    <button id="cancelLoad" class="flex-1 px-4 py-3 rounded-xl bg-slate-700 font-black text-slate-300 uppercase tracking-tighter">Cancel</button>
+                    <button id="confirmLoad" class="flex-1 px-4 py-3 rounded-xl bg-blue-600 font-black text-white shadow-lg shadow-blue-500/20 uppercase tracking-tighter">Confirm Load</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="max-w-6xl mx-auto">
         <header class="mb-8 border-b border-slate-700 pb-6 flex flex-col md:flex-row justify-between items-end gap-4">
             <div>
                 <div class="flex items-center gap-3">
-                    <span class="text-3xl font-black tracking-tighter text-blue-500 italic">M2Belt</span>
+                    <span class="text-3xl font-black tracking-tighter text-blue-500 italic">M-2</span>
                 </div>
-                <p class="text-slate-500 font-medium text-sm">Real-Time Time-Stamp Synchronization</p>
+                <p class="text-slate-500 font-medium text-sm">Regmi Bimal Software</p>
             </div>
             
             <div class="flex flex-wrap items-center gap-6 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
@@ -162,8 +200,8 @@
                     </div>
                 </div>
                 
-                <button id="addProduct" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-lg font-black uppercase tracking-tighter transition-all active:scale-95">
-                    Load Unit
+                <button id="openModal" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-lg font-black uppercase tracking-tighter transition-all active:scale-95">
+                    Add Product
                 </button>
             </div>
         </header>
@@ -174,7 +212,7 @@
                     <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
                     HEAT QUENCHING (7980mm)
                 </div>
-                <span id="pCount" class="bg-blue-900/40 px-2 py-0.5 rounded text-blue-300">Units: 0</span>
+                <span id="pCount" class="bg-blue-900/40 px-2 py-0.5 rounded text-blue-300">Neji: 0</span>
             </div>
             
             <div class="belt-wrapper">
@@ -191,7 +229,7 @@
 
             <div class="uturn-indicator">
                 <svg class="w-5 h-5 mr-3 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M12 7v5l3 3"/></svg>
-                Buffer Zone (25 min) <span id="uturnCount" class="ml-3 text-white bg-blue-600 px-3 py-0.5 rounded-full text-xs">0</span>
+                Oil Belt (25 min Delay) <span id="uturnCount" class="ml-3 text-white bg-blue-600 px-3 py-0.5 rounded-full text-xs">0</span>
             </div>
 
             <div class="mb-3 flex justify-between text-[10px] text-slate-400 font-black uppercase tracking-widest px-1">
@@ -206,10 +244,10 @@
                 <div class="conveyor-belt" id="belt2">
                     <div class="belt-texture" id="texture2"></div>
                     <div class="belt-shading"></div>
-                    <div class="zone-overlay" style="left: 0%; width: 25%;" data-belt="2" data-zone="1"><span>ZONE 1</span></div>
-                    <div class="zone-overlay" style="left: 25%; width: 25%;" data-belt="2" data-zone="2"><span>ZONE 2</span></div>
-                    <div class="zone-overlay" style="left: 50%; width: 25%;" data-belt="2" data-zone="3"><span>ZONE 3</span></div>
-                    <div class="zone-overlay" style="left: 75%; width: 25%;" data-belt="2" data-zone="4"><span>ZONE 4</span></div>
+                    <div class="zone-overlay" style="left: 0%; width: 25%;" data-belt="2" data-zone="1"><span>ZONE 4</span></div>
+                    <div class="zone-overlay" style="left: 25%; width: 25%;" data-belt="2" data-zone="2"><span>ZONE 3</span></div>
+                    <div class="zone-overlay" style="left: 50%; width: 25%;" data-belt="2" data-zone="3"><span>ZONE 2</span></div>
+                    <div class="zone-overlay" style="left: 75%; width: 25%;" data-belt="2" data-zone="4"><span>ZONE 1</span></div>
                 </div>
             </div>
         </div>
@@ -218,15 +256,16 @@
             <table class="w-full text-xs text-left">
                 <thead class="bg-slate-800/50 text-slate-500 uppercase font-black tracking-widest">
                     <tr>
-                        <th class="px-6 py-4">Serial ID</th>
+                        <th class="px-6 py-4">ID / Product Name</th>
+                        <th class="px-6 py-4">Start / Exit Times</th>
+                        <th class="px-6 py-4 text-center">Current Position</th>
                         <th class="px-6 py-4">Status</th>
-                        <th class="px-6 py-4">Linear Position</th>
-                        <th class="px-6 py-4 text-right">Metrics (Remaining Time)</th>
+                        <th class="px-6 py-4 text-right">Metrics</th>
                     </tr>
                 </thead>
                 <tbody id="trackingBody"></tbody>
             </table>
-            <div id="emptyState" class="p-12 text-center text-slate-600 font-medium">System Idle. Load a unit to begin tracking.</div>
+            <div id="emptyState" class="p-12 text-center text-slate-600 font-medium italic">Active pipeline empty. Load a unit to track.</div>
         </div>
     </div>
 
@@ -235,22 +274,22 @@
         const R_LENGTH = 7200; 
         const UTURN_MS = 25 * 60 * 1000; 
 
-        // DOM Elements
+        // DOM
         const speedS1 = document.getElementById('speedSlider1');
         const speedS2 = document.getElementById('speedSlider2');
         const trackingBody = document.getElementById('trackingBody');
         const emptyState = document.getElementById('emptyState');
-        const addBtn = document.getElementById('addProduct');
+        const openModalBtn = document.getElementById('openModal');
+        const inputModal = document.getElementById('inputModal');
+        const cancelLoad = document.getElementById('cancelLoad');
+        const confirmLoad = document.getElementById('confirmLoad');
 
-        // Initial state loading from LocalStorage
+        // Storage initialization
         const savedProducts = JSON.parse(localStorage.getItem('m2belt_products') || '[]');
         const savedCounter = parseInt(localStorage.getItem('m2belt_counter') || '1');
-        
-        // Load speeds or use defaults if never set
         const savedSpeedP = localStorage.getItem('m2belt_speedP') || '177';
         const savedSpeedR = localStorage.getItem('m2belt_speedR') || '120';
         
-        // Sync sliders with saved values
         speedS1.value = savedSpeedP;
         speedS2.value = savedSpeedR;
 
@@ -264,81 +303,93 @@
         };
 
         function saveToStorage() {
-            const toSave = state.products.map(p => ({
+            const cleanData = state.products.map(p => ({
                 id: p.id,
+                name: p.name,
                 stage: p.stage,
                 startTime: p.startTime,
                 returnStartTime: p.returnStartTime,
                 uturnStart: p.uturnStart,
-                currentPos: p.currentPos
+                currentPos: p.currentPos,
+                entryClock: p.entryClock,
+                exitClock: p.exitClock
             }));
-            localStorage.setItem('m2belt_products', JSON.stringify(toSave));
+            localStorage.setItem('m2belt_products', JSON.stringify(cleanData));
             localStorage.setItem('m2belt_counter', state.counter.toString());
             localStorage.setItem('m2belt_speedP', state.speedP.toString());
             localStorage.setItem('m2belt_speedR', state.speedR.toString());
         }
 
-        // Update speeds when sliders change
-        speedS1.addEventListener('input', (e) => {
-            state.speedP = parseInt(e.target.value);
-            saveToStorage();
-        });
-        speedS2.addEventListener('input', (e) => {
-            state.speedR = parseInt(e.target.value);
-            saveToStorage();
-        });
+        speedS1.addEventListener('input', (e) => { state.speedP = parseInt(e.target.value); saveToStorage(); });
+        speedS2.addEventListener('input', (e) => { state.speedR = parseInt(e.target.value); saveToStorage(); });
 
-        function syncProductProgress(p) {
+        function syncProgress(p) {
             const now = Date.now();
-            let distanceTravelled, totalLength, speed;
-
             if (p.stage === 'p-belt') {
-                const elapsedMinutes = (now - p.startTime) / 60000;
-                speed = state.speedP;
-                totalLength = P_LENGTH;
-                distanceTravelled = speed * elapsedMinutes;
-                
-                return {
-                    distance: Math.min(distanceTravelled, totalLength),
-                    isFinished: distanceTravelled >= totalLength,
-                    remainingMin: Math.max(0, (totalLength - distanceTravelled) / speed)
-                };
-            } 
-            else if (p.stage === 'r-belt') {
-                const elapsedMinutes = (now - p.returnStartTime) / 60000;
-                speed = state.speedR;
-                totalLength = R_LENGTH;
-                distanceTravelled = speed * elapsedMinutes;
-
-                return {
-                    distance: Math.min(distanceTravelled, totalLength),
-                    isFinished: distanceTravelled >= totalLength,
-                    remainingMin: Math.max(0, (totalLength - distanceTravelled) / speed)
-                };
+                const elapsedMin = (now - p.startTime) / 60000;
+                const dist = state.speedP * elapsedMin;
+                return { dist: Math.min(dist, P_LENGTH), isFin: dist >= P_LENGTH, rem: Math.max(0, (P_LENGTH - dist) / state.speedP) };
+            } else if (p.stage === 'r-belt') {
+                const elapsedMin = (now - p.returnStartTime) / 60000;
+                const dist = state.speedR * elapsedMin;
+                return { dist: Math.min(dist, R_LENGTH), isFin: dist >= R_LENGTH, rem: Math.max(0, (R_LENGTH - dist) / state.speedR) };
             }
-            return { distance: 0, isFinished: false, remainingMin: 0 };
+            return { dist: 0, isFin: false, rem: 0 };
         }
 
-        function createProduct() {
-            const id = `U-${state.counter++}`;
+        // Modal Logic
+        openModalBtn.addEventListener('click', () => { inputModal.style.display = 'flex'; });
+        cancelLoad.addEventListener('click', () => { inputModal.style.display = 'none'; });
+        
+        confirmLoad.addEventListener('click', () => {
+            const nameInput = document.getElementById('modalProdName').value || `UNIT-${state.counter}`;
+            const startOver = document.getElementById('modalStartTime').value;
+            const endOver = document.getElementById('modalFinishTime').value;
+
+            let now = Date.now();
+            if (startOver) {
+                const [h, m] = startOver.split(':');
+                const d = new Date(); d.setHours(h, m, 0, 0);
+                now = d.getTime();
+            }
+
+            const hqDur = (P_LENGTH / state.speedP) * 60000;
+            const htDur = (R_LENGTH / state.speedR) * 60000;
+            let estExit = now + hqDur + UTURN_MS + htDur;
+
+            if (endOver) {
+                const [h, m] = endOver.split(':');
+                const d = new Date(); d.setHours(h, m, 0, 0);
+                estExit = d.getTime();
+            }
+
             state.products.push({
-                id,
+                id: `U-${state.counter++}`,
+                name: nameInput,
                 stage: 'p-belt',
-                startTime: Date.now(), 
+                startTime: now,
                 returnStartTime: null,
                 uturnStart: null,
                 currentPos: 0,
+                entryClock: now,
+                exitClock: estExit,
                 element: null
             });
+
+            document.getElementById('modalProdName').value = '';
+            inputModal.style.display = 'none';
             saveToStorage();
             updateEmptyState();
+        });
+
+        function formatClock(ts) {
+            if (!ts) return "--:--";
+            return new Date(ts).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 
-        addBtn.addEventListener('click', createProduct);
-
-        function formatTime(totalMinutes) {
-            const mins = Math.floor(totalMinutes);
-            const secs = Math.floor((totalMinutes % 1) * 60);
+        function formatTimeRemaining(m) {
+            const mins = Math.floor(m);
+            const secs = Math.floor((m % 1) * 60);
             return `${mins}m ${secs}s`;
         }
 
@@ -347,10 +398,10 @@
             const dt = frameTime - state.lastFrameTime;
             state.lastFrameTime = frameTime;
 
-            // Display current values
             document.getElementById('speedVal1').innerText = state.speedP;
             document.getElementById('speedVal2').innerText = state.speedR;
 
+            // Animate belt textures
             state.textureOffsets[0] = (state.textureOffsets[0] + (state.speedP / 12000) * dt) % 40;
             state.textureOffsets[1] = (state.textureOffsets[1] - (state.speedR / 12000) * dt) % 40;
             document.getElementById('texture1').style.transform = `translateX(${state.textureOffsets[0]}px)`;
@@ -363,59 +414,52 @@
 
             for (let i = state.products.length - 1; i >= 0; i--) {
                 const p = state.products[i];
-                const sync = syncProductProgress(p);
+                const sync = syncProgress(p);
 
                 if (p.stage === 'p-belt') {
-                    p.currentPos = sync.distance;
-                    const zone = Math.min(Math.floor(p.currentPos / (P_LENGTH / 5)) + 1, 5);
-                    activeP.add(zone);
-
+                    p.currentPos = sync.dist;
+                    activeP.add(Math.min(Math.floor(p.currentPos / (P_LENGTH / 5)) + 1, 5));
+                    
                     if (!p.element) {
                         p.element = document.createElement('div');
                         p.element.className = 'product';
-                        p.element.innerHTML = `<span>${p.id}</span>`;
                         document.getElementById('belt1').appendChild(p.element);
                     }
-                    
+                    p.element.innerHTML = `<span class="opacity-40 text-[7px] font-black">${p.id}</span><span class="font-black text-[9px] truncate w-full px-1">${p.name}</span>`;
                     const pct = (p.currentPos / P_LENGTH);
-                    const beltWidth = document.getElementById('belt1').offsetWidth;
-                    p.element.style.transform = `translateX(${pct * beltWidth - 22}px)`;
+                    p.element.style.transform = `translateX(${pct * (document.getElementById('belt1').offsetWidth - 44)}px)`;
 
-                    if (sync.isFinished) {
+                    if (sync.isFin) {
                         p.stage = 'u-turn';
-                        const timeNeededMs = (P_LENGTH / state.speedP) * 60000;
-                        p.uturnStart = p.startTime + timeNeededMs; 
+                        p.uturnStart = p.startTime + ((P_LENGTH / state.speedP) * 60000);
                         if (p.element) { p.element.remove(); p.element = null; }
                         stateChanged = true;
                     }
                 } 
                 else if (p.stage === 'u-turn') {
                     uturnCount++;
-                    const elapsed = now - p.uturnStart;
-                    if (elapsed >= UTURN_MS) {
+                    if ((now - p.uturnStart) >= UTURN_MS) {
                         p.stage = 'r-belt';
                         p.returnStartTime = p.uturnStart + UTURN_MS;
                         stateChanged = true;
                     }
                 } 
                 else if (p.stage === 'r-belt') {
-                    p.currentPos = sync.distance;
-                    const zone = Math.min(Math.floor(p.currentPos / (R_LENGTH / 4)) + 1, 4);
-                    activeR.add(zone);
+                    p.currentPos = sync.dist;
+                    activeR.add(Math.min(Math.floor(p.currentPos / (R_LENGTH / 4)) + 1, 4));
 
                     if (!p.element) {
                         p.element = document.createElement('div');
                         p.element.className = 'product';
                         p.element.style.borderColor = '#22c55e';
-                        p.element.innerHTML = `<span>${p.id}</span>`;
                         document.getElementById('belt2').appendChild(p.element);
                     }
-
+                    p.element.innerHTML = `<span class="opacity-40 text-[7px] font-black">${p.id}</span><span class="font-black text-[9px] truncate w-full px-1">${p.name}</span>`;
                     const pct = (p.currentPos / R_LENGTH);
-                    const beltWidth = document.getElementById('belt2').offsetWidth;
-                    p.element.style.transform = `translateX(${beltWidth - (pct * beltWidth) - 22}px)`;
+                    const bWidth = document.getElementById('belt2').offsetWidth;
+                    p.element.style.transform = `translateX(${(bWidth - 44) - (pct * (bWidth - 44))}px)`;
 
-                    if (sync.isFinished) {
+                    if (sync.isFin) {
                         if (p.element) p.element.remove();
                         state.products.splice(i, 1);
                         stateChanged = true;
@@ -425,7 +469,6 @@
             }
 
             if (stateChanged) saveToStorage();
-
             updateZones(activeP, activeR);
             document.getElementById('uturnCount').innerText = uturnCount;
             document.getElementById('pCount').innerText = `Units: ${state.products.filter(x => x.stage === 'p-belt').length}`;
@@ -439,11 +482,8 @@
             document.querySelectorAll('.zone-overlay').forEach(el => {
                 const b = el.dataset.belt;
                 const z = parseInt(el.dataset.zone);
-                if ((b == "1" && activeP.has(z)) || (b == "2" && activeR.has(z))) {
-                    el.classList.add('zone-active');
-                } else {
-                    el.classList.remove('zone-active');
-                }
+                if ((b == "1" && activeP.has(z)) || (b == "2" && activeR.has(z))) el.classList.add('zone-active');
+                else el.classList.remove('zone-active');
             });
         }
 
@@ -451,33 +491,36 @@
             let html = '';
             const now = Date.now();
             state.products.forEach(p => {
-                const sync = syncProductProgress(p);
+                const sync = syncProgress(p);
                 let status = `<span class="bg-blue-900/40 text-blue-400 px-2 py-0.5 rounded font-black tracking-tighter">HQ BELT</span>`;
-                let metrics = formatTime(sync.remainingMin);
+                let remTxt = formatTimeRemaining(sync.rem);
 
                 if (p.stage === 'u-turn') {
                     status = `<span class="bg-amber-900/40 text-amber-400 px-2 py-0.5 rounded font-black tracking-tighter">BUFFER</span>`;
-                    const remMs = Math.max(0, UTURN_MS - (now - p.uturnStart));
-                    metrics = formatTime(remMs / 60000);
+                    remTxt = formatTimeRemaining((UTURN_MS - (now - p.uturnStart)) / 60000);
                 } else if (p.stage === 'r-belt') {
                     status = `<span class="bg-green-900/40 text-green-400 px-2 py-0.5 rounded font-black tracking-tighter">HT BELT</span>`;
                 }
 
                 html += `<tr class="border-t border-slate-800/50 hover:bg-white/5 transition-colors">
-                    <td class="px-6 py-4 font-black text-slate-300 tracking-tighter">${p.id}</td>
+                    <td class="px-6 py-4">
+                        <div class="font-black text-slate-200 tracking-tighter leading-none">${p.name}</div>
+                        <div class="text-[9px] text-slate-500 font-bold mt-1 uppercase tracking-widest">${p.id}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-blue-400 font-mono text-[11px] font-bold">START: ${formatClock(p.entryClock)}</div>
+                        <div class="text-green-400 font-mono text-[11px] font-bold mt-1">EXIT: ${formatClock(p.exitClock)}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center font-mono text-slate-400">${p.stage === 'u-turn' ? 'BUFFERING' : p.currentPos.toFixed(0) + ' mm'}</td>
                     <td class="px-6 py-4">${status}</td>
-                    <td class="px-6 py-4 font-mono text-slate-400">${p.stage === 'u-turn' ? 'Queued' : p.currentPos.toFixed(0) + ' mm'}</td>
-                    <td class="px-6 py-4 text-right font-mono text-slate-500">Remaining: ${metrics}</td>
+                    <td class="px-6 py-4 text-right font-mono text-slate-500">${remTxt}</td>
                 </tr>`;
             });
             trackingBody.innerHTML = html;
         }
 
-        function updateEmptyState() { 
-            emptyState.style.display = state.products.length === 0 ? 'block' : 'none'; 
-        }
-
-        // Initialize display
+        function updateEmptyState() { emptyState.style.display = state.products.length === 0 ? 'block' : 'none'; }
+        
         updateEmptyState();
         requestAnimationFrame(animate);
     </script>
