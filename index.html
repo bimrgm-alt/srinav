@@ -182,19 +182,13 @@
             <h3 class="text-2xl font-black mb-6 text-blue-400 italic">LOAD NEW UNIT</h3>
             <div class="space-y-5">
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Product Name (1 to 9)</label>
-                    <input type="text" id="modalProdName" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none text-white font-bold" placeholder="e.g. 5">
-                    <p id="errorName" class="text-red-500 text-[10px] mt-1 font-bold hidden">Only numbers 1-9 allowed.</p>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Product Name (001 to 045)</label>
+                    <input type="text" id="modalProdName" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none text-white font-bold" placeholder="e.g. 021">
+                    <p id="errorName" class="text-red-500 text-[10px] mt-1 font-bold hidden">Invalid Name. Use 001 through 045.</p>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Start Time</label>
-                        <input type="time" id="modalStartTime" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Target Exit</label>
-                        <input type="time" id="modalFinishTime" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white">
-                    </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Process Start Time</label>
+                    <input type="time" id="modalStartTime" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white">
                 </div>
                 <div class="flex gap-4 pt-4">
                     <button id="cancelLoad" class="flex-1 px-4 py-3 rounded-xl bg-slate-700 font-black text-slate-300 uppercase">Cancel</button>
@@ -413,10 +407,14 @@
         
         confirmLoad.onclick = () => {
             const name = modalProdName.value.trim();
-            if (!/^[1-9]$/.test(name)) { errorName.classList.remove('hidden'); return; }
+            // Validates 001 to 045
+            const numVal = parseInt(name);
+            if (isNaN(numVal) || numVal < 1 || numVal > 45 || name.length !== 3) { 
+                errorName.classList.remove('hidden'); 
+                return; 
+            }
 
             const startOver = document.getElementById('modalStartTime').value;
-            const endOver = document.getElementById('modalFinishTime').value;
 
             let now = Date.now();
             if (startOver) {
@@ -425,19 +423,14 @@
                 now = d.getTime();
             }
 
+            // Internal calculation of exit based on durations
             const hqDur = (P_LENGTH / state.speedP) * 60000;
             const htDur = (R_LENGTH / state.speedR) * 60000;
-            let estExit = now + hqDur + UTURN_MS + htDur;
-
-            if (endOver) {
-                const [h, m] = endOver.split(':');
-                const d = new Date(); d.setHours(h, m, 0, 0);
-                estExit = d.getTime();
-            }
+            const estExit = now + hqDur + UTURN_MS + htDur;
 
             state.counter++;
             state.products.push({
-                id: `U${name}`, name, stage: 'p-belt', startTime: now,
+                id: `ID-${name}`, name, stage: 'p-belt', startTime: now,
                 returnStartTime: null, uturnStart: null, currentPos: 0,
                 entryClock: now, exitClock: estExit, element: null,
                 color: PRODUCT_COLORS[state.counter % PRODUCT_COLORS.length],
@@ -478,7 +471,6 @@
             let uturnCount = 0;
             let stateChanged = false;
             
-            // Tank sub-zone tracking for UI highlighting
             let subZonePresence = { oil: false, water: false, fall: false };
 
             for (let i = state.products.length - 1; i >= 0; i--) {
@@ -495,7 +487,7 @@
                         document.getElementById('belt1').appendChild(p.element);
                     }
                     p.element.style.backgroundColor = p.color;
-                    p.element.innerHTML = `<span class="opacity-60 text-[7px] font-black">${p.id}</span><span class="font-black text-[12px]">${p.name}</span>`;
+                    p.element.innerHTML = `<span class="opacity-60 text-[7px] font-black">${p.id}</span><span class="font-black text-[11px]">${p.name}</span>`;
                     const pct = (p.currentPos / P_LENGTH);
                     p.element.style.transform = `translateX(${pct * (document.getElementById('belt1').offsetWidth - 44)}px)`;
 
@@ -511,7 +503,6 @@
                     const elapsedMs = now - p.uturnStart;
                     const elapsedMin = elapsedMs / 60000;
 
-                    // Sub-zone Logic
                     if (elapsedMin < 15) {
                         p.subZone = "OIL ZONE";
                         subZonePresence.oil = true;
@@ -549,7 +540,7 @@
                         document.getElementById('belt2').appendChild(p.element);
                     }
                     p.element.style.backgroundColor = p.color;
-                    p.element.innerHTML = `<span class="opacity-60 text-[7px] font-black">${p.id}</span><span class="font-black text-[12px]">${p.name}</span>`;
+                    p.element.innerHTML = `<span class="opacity-60 text-[7px] font-black">${p.id}</span><span class="font-black text-[11px]">${p.name}</span>`;
                     const pct = (p.currentPos / R_LENGTH);
                     const bWidth = document.getElementById('belt2').offsetWidth;
                     p.element.style.transform = `translateX(${(bWidth - 44) - (pct * (bWidth - 44))}px)`;
@@ -565,14 +556,12 @@
 
             if (stateChanged) saveToStorage();
             
-            // Visual Zone Updates
             document.querySelectorAll('.zone-overlay').forEach(el => {
                 const b = el.dataset.belt, z = parseInt(el.dataset.zone);
                 if ((b == "1" && activeP.has(z)) || (b == "2" && activeR.has(z))) el.classList.add('zone-active');
                 else el.classList.remove('zone-active');
             });
 
-            // Tank Highlighting
             const tankOil = document.getElementById('tank-oil');
             const tankWater = document.getElementById('tank-water');
             const tankFall = document.getElementById('tank-fall');
@@ -608,7 +597,7 @@
                         "WATER ZONE": "bg-blue-900/40 text-blue-400 border-blue-500/30",
                         "FALL ZONE": "bg-indigo-900/40 text-indigo-400 border-indigo-500/30"
                     };
-                    status = `<span class="${zoneClasses[p.subZone]} px-2 py-0.5 rounded font-black border animate-pulse">${p.subZone}</span>`;
+                    status = `<span class="${zoneClasses[p.subZone]} px-2 py-0.5 rounded font-black border animate-pulse text-[9px]">${p.subZone}</span>`;
                     remTxt = formatTimeRemaining((UTURN_MS - (now - p.uturnStart)) / 60000);
                 } else if (p.stage === 'r-belt') {
                     status = `<span class="bg-green-900/40 text-green-400 px-2 py-0.5 rounded font-black tracking-tighter">HT BELT</span>`;
