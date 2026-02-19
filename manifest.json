@@ -7,11 +7,12 @@
 "theme_color": "#000000",
 "icons": [
 {
-"src": "https://Icon.png",
+"src": "https://icon.png",
 "sizes": "512x512",
 "type": "image/png"
 }
 ]
 
 }
+
 
